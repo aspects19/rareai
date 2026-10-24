@@ -1,37 +1,68 @@
 #!/usr/bin/env python3
+"""
+Flask API server powered by Google's Gemma 4 via the OpenAI-compatible endpoint.
+
+Environment variables (set in .env or shell):
+
+  GEMMA_API_KEY        : Google AI Studio API key (required)
+  GEMMA_BASE_URL       : override base URL
+                         (default: https://generativelanguage.googleapis.com/v1beta/openai/)
+  GEMMA_MODEL          : model slug (default: gemma-4-31b-it)
+  GEMMA_TEMPERATURE    : float, e.g. 0.7 (optional)
+  GEMMA_MAX_TOKENS     : int, e.g. 4096 (optional)
+  GEMMA_THINKING_LEVEL : "high" | "medium" | "low" | "minimal" — enable chain-of-thought (optional)
+  GEMMA_FORCE_HTTPX    : set to 1 to skip SDK and use httpx directly (optional)
+
+  PORT                 : listening port (default: 8000)
+  FLASK_DEBUG          : set to 1 for debug mode
+  UPLOAD_DIR           : directory for uploaded files (default: ./uploads)
+"""
+
+from __future__ import annotations
+
+import base64
+import glob
 import json
+import mimetypes
 import os
+import uuid
 from typing import Any, Dict, List, Optional
 
 from flask import Flask, Response, jsonify, request, send_file
 from werkzeug.utils import secure_filename
-import uuid
-import glob
-import mimetypes
-import base64
 
-# Reuse .env loader and helpers from the local script
-import openrouter_chat as orc
-
+# Reuse the .env loader and helpers from the Gemma CLI companion script.
+import gemma_chat as gc
 
 app = Flask(__name__)
 
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
 
 def _bool_env(name: str) -> bool:
     return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
-def _ensure_keys_visible() -> None:
-    # Mirror key vars so either name works
-    if ("OPENROUTER_API_KEY" not in os.environ) and os.getenv("OPENAI_API_KEY"):
-        os.environ["OPENROUTER_API_KEY"] = os.getenv("OPENAI_API_KEY", "")
-    if ("OPENAI_API_KEY" not in os.environ) and os.getenv("OPENROUTER_API_KEY"):
-        os.environ["OPENAI_API_KEY"] = os.getenv("OPENROUTER_API_KEY", "")
+def _ensure_api_key() -> str:
+    """Return the GEMMA_API_KEY from the environment, or empty string."""
+    return os.getenv("GEMMA_API_KEY", "").strip()
 
 
-# ----------------------
+def _default_model() -> str:
+    return os.getenv("GEMMA_MODEL", "gemma-4-31b-it").strip()
+
+
+def _base_url() -> str:
+    return os.getenv(
+        "GEMMA_BASE_URL",
+        "https://generativelanguage.googleapis.com/v1beta/openai/",
+    ).strip()
+
+
+# ---------------------------------------------------------------------------
 # File upload utilities
-# ----------------------
+# ---------------------------------------------------------------------------
 
 def _upload_dir() -> str:
     d = os.getenv("UPLOAD_DIR", os.path.join(os.path.dirname(__file__), "uploads"))
@@ -40,10 +71,7 @@ def _upload_dir() -> str:
 
 
 def _save_upload(fs) -> Dict[str, Any]:
-    """Save a Werkzeug FileStorage and return metadata dict with id.
-
-    The file is stored as <id>_<secure_name> in UPLOAD_DIR.
-    """
+    """Persist a Werkzeug FileStorage object; return metadata dict with id."""
     file_id = uuid.uuid4().hex
     orig_name = fs.filename or "file"
     clean_name = secure_filename(orig_name) or f"upload-{file_id}"
@@ -61,7 +89,6 @@ def _resolve_upload(file_id: str) -> Optional[Dict[str, Any]]:
         return None
     path = matches[0]
     basename = os.path.basename(path)
-    # original name is the portion after first underscore
     try:
         _, name = basename.split("_", 1)
     except ValueError:
@@ -69,47 +96,6 @@ def _resolve_upload(file_id: str) -> Optional[Dict[str, Any]]:
     size = os.path.getsize(path)
     mtype = mimetypes.guess_type(name)[0] or "application/octet-stream"
     return {"id": file_id, "name": name, "path": path, "size": size, "mimetype": mtype}
-
-
-def _is_text_like(mimetype: str, name: str) -> bool:
-    if mimetype.startswith("text/"):
-        return True
-    if mimetype in {"application/json"}:
-        return True
-    if any(name.lower().endswith(ext) for ext in (".md", ".csv", ".json", ".txt")):
-        return True
-    return False
-
-
-def _append_attachments_to_content(content: str, attachments: List[Dict[str, Any]]) -> str:
-    if not attachments:
-        return content
-    out = content
-    MAX_BYTES = 512 * 1024
-    MAX_CHARS = 20000
-    for att in attachments:
-        fid = att.get("id")
-        if not fid:
-            continue
-        meta = _resolve_upload(str(fid))
-        if not meta:
-            continue
-        name = meta["name"]
-        size_kb = max(1, round(meta["size"] / 1024))
-        mimetype = meta["mimetype"]
-        if _is_text_like(mimetype, name) and meta["size"] <= MAX_BYTES:
-            try:
-                with open(meta["path"], "r", encoding="utf-8", errors="replace") as f:
-                    raw = f.read()
-            except Exception:
-                raw = "[Failed to read file]"
-            if len(raw) > MAX_CHARS:
-                raw = raw[:MAX_CHARS] + "\n... [truncated]"
-            out += f"\n\nAttached file: {name} ({size_kb} KB)\n\n```text\n{raw}\n```"
-        else:
-            note = "non-text or too large; not inlined"
-            out += f"\n\nAttached file: {name} ({size_kb} KB) [{note}]"
-    return out
 
 
 def _resolve_path(path: str) -> Optional[Dict[str, Any]]:
@@ -126,47 +112,59 @@ def _resolve_path(path: str) -> Optional[Dict[str, Any]]:
 
 
 def _normalize_attachment_meta(att: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    # Prefer explicit upload id
     fid = att.get("id")
     if fid:
         return _resolve_upload(str(fid))
-    # Fall back to local file path
     path = att.get("path") or att.get("file") or att.get("filepath")
     if isinstance(path, str) and path.strip():
         return _resolve_path(path)
     return None
 
 
+def _is_text_like(mimetype: str, name: str) -> bool:
+    if mimetype.startswith("text/"):
+        return True
+    if mimetype in {"application/json"}:
+        return True
+    if any(name.lower().endswith(ext) for ext in (".md", ".csv", ".json", ".txt")):
+        return True
+    return False
+
+
 def _model_supports_images(model: Optional[str]) -> bool:
+    """Gemma 4 vision-capable slugs contain 'it' suffix and are multimodal by default."""
     if not model:
         return False
     m = model.strip().lower()
-    # Heuristic: common multimodal model slugs
-    patterns = [
+    # gemma-4-*-it models are multimodal; also match common vision keywords
+    vision_patterns = [
+        "gemma-4",
+        "gemini",
+        "vision",
+        "-vl",
         "gpt-4o",
         "gpt-4.1",
         "gpt-4-vision",
         "gpt-4-turbo",
         "o4",
         "omni",
-        "vision",
-        "-vl",
-        " llava",
-        "minicpm-v",
+        "llava",
         "qwen-vl",
-        "llama-vision",
     ]
-    return any(p in m for p in patterns)
+    return any(p in m for p in vision_patterns)
 
 
 def _append_attachments_to_messages(
-    msgs: List[Dict[str, Any]], attachments: Optional[List[Dict[str, Any]]], model: Optional[str]
+    msgs: List[Dict[str, Any]],
+    attachments: Optional[List[Dict[str, Any]]],
+    model: Optional[str],
 ) -> List[Dict[str, Any]]:
+    """Inline text attachments and embed images for multimodal models."""
     if not attachments:
         return msgs
 
-    # Find last user message to append to
-    idx = None
+    # Find the last user message to append to.
+    idx: Optional[int] = None
     for i in range(len(msgs) - 1, -1, -1):
         if msgs[i].get("role") == "user":
             idx = i
@@ -174,26 +172,21 @@ def _append_attachments_to_messages(
     if idx is None:
         return msgs
 
-    # Prepare original content as text
     new_msgs = list(msgs)
     original_content = new_msgs[idx].get("content", "")
     if not isinstance(original_content, str):
-        try:
-            original_content = str(original_content)
-        except Exception:
-            original_content = ""
+        original_content = str(original_content)
 
-    # Limits
-    MAX_TEXT_BYTES = 512 * 1024
-    MAX_TEXT_CHARS = 20000
+    MAX_TEXT_BYTES = 512 * 1024       # 512 KB
+    MAX_TEXT_CHARS = 20_000
     MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
 
     text_out = original_content
     image_parts: List[Dict[str, Any]] = []
     supports_images = _model_supports_images(model)
 
-    for att in attachments or []:
-        meta = _normalize_attachment_meta(att) or None
+    for att in attachments:
+        meta = _normalize_attachment_meta(att)
         if not meta:
             continue
         name = meta["name"]
@@ -204,8 +197,8 @@ def _append_attachments_to_messages(
 
         if _is_text_like(mtype, name) and size <= MAX_TEXT_BYTES and path:
             try:
-                with open(path, "r", encoding="utf-8", errors="replace") as f:
-                    raw = f.read()
+                with open(path, "r", encoding="utf-8", errors="replace") as fh:
+                    raw = fh.read()
             except Exception:
                 raw = "[Failed to read file]"
             if len(raw) > MAX_TEXT_CHARS:
@@ -216,15 +209,15 @@ def _append_attachments_to_messages(
         if mtype.startswith("image/") and size <= MAX_IMAGE_BYTES and path:
             if supports_images:
                 try:
-                    with open(path, "rb") as f:
-                        b = f.read()
-                    b64 = base64.b64encode(b).decode("ascii")
-                    data_url = f"data:{mtype};base64,{b64}"
+                    with open(path, "rb") as fh:
+                        b64 = base64.b64encode(fh.read()).decode("ascii")
                     image_parts.append({
                         "type": "image_url",
-                        "image_url": {"url": data_url, "detail": "auto"},
+                        "image_url": {
+                            "url": f"data:{mtype};base64,{b64}",
+                            "detail": "auto",
+                        },
                     })
-                    # Also add a brief textual note for context
                     text_out += f"\n\nAttached image: {name} ({size_kb} KB)"
                 except Exception:
                     text_out += f"\n\nAttached image: {name} ({size_kb} KB) [failed to read]"
@@ -232,25 +225,32 @@ def _append_attachments_to_messages(
                 text_out += f"\n\nAttached image: {name} ({size_kb} KB) [model not multimodal]"
             continue
 
-        # Fallback note for non-text or large files
-        note = []
+        # Non-text or oversized
+        notes: List[str] = []
         if not mtype.startswith("image/") and not _is_text_like(mtype, name):
-            note.append("non-text")
-        if size > (MAX_IMAGE_BYTES if mtype.startswith("image/") else MAX_TEXT_BYTES):
-            note.append("too large")
-        note_s = "; ".join(note) if note else "not inlined"
+            notes.append("non-text")
+        cap = MAX_IMAGE_BYTES if mtype.startswith("image/") else MAX_TEXT_BYTES
+        if size > cap:
+            notes.append("too large")
+        note_s = "; ".join(notes) if notes else "not inlined"
         text_out += f"\n\nAttached file: {name} ({size_kb} KB) [{note_s}]"
 
     if image_parts and supports_images:
-        # Use multimodal content array: first text, then images
-        new_msgs[idx] = {**new_msgs[idx], "content": [{"type": "text", "text": text_out}] + image_parts}
+        new_msgs[idx] = {
+            **new_msgs[idx],
+            "content": [{"type": "text", "text": text_out}] + image_parts,
+        }
     else:
         new_msgs[idx] = {**new_msgs[idx], "content": text_out}
 
     return new_msgs
 
 
-def _build_messages(prompt: Optional[str], system_prompt: Optional[str], messages: Optional[List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
+def _build_messages(
+    prompt: Optional[str],
+    system_prompt: Optional[str],
+    messages: Optional[List[Dict[str, Any]]],
+) -> List[Dict[str, Any]]:
     if messages and isinstance(messages, list):
         return messages
     seq: List[Dict[str, Any]] = []
@@ -261,86 +261,77 @@ def _build_messages(prompt: Optional[str], system_prompt: Optional[str], message
     return seq
 
 
+def _build_extra_body(thinking_level: Optional[str]) -> Dict[str, Any]:
+    """Construct the extra_body dict for Gemma 4 thinking / chain-of-thought."""
+    extra_body: Dict[str, Any] = {}
+    valid_levels = {"high", "medium", "low", "minimal"}
+    if thinking_level and thinking_level.lower() in valid_levels:
+        extra_body["google"] = {
+            "thinking_config": {"thinking_level": thinking_level.lower()}
+        }
+    return extra_body
+
+
+# ---------------------------------------------------------------------------
+# Core chat helper (non-streaming)
+# ---------------------------------------------------------------------------
+
 def _send_chat(
     *,
     messages: List[Dict[str, Any]],
     model: Optional[str],
-    site_url: Optional[str],
-    app_name: Optional[str],
-    provider_order: Optional[List[str]],
-    provider_allow_fallbacks: Optional[bool],
-    provider_route: Optional[Dict[str, Any]],
     temperature: Optional[float],
     max_tokens: Optional[int],
+    thinking_level: Optional[str],
     force_httpx: bool,
 ) -> Dict[str, Any]:
-    # Load env and normalize keys
-    orc.load_env_file()
-    _ensure_keys_visible()
-
-    api_key = (os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY") or "").strip()
+    gc.load_env_file()
+    api_key = _ensure_api_key()
     if not api_key:
-        return {"error": "Missing OPENROUTER_API_KEY/OPENAI_API_KEY"}
+        return {"error": "Missing GEMMA_API_KEY"}
 
-    base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").strip()
-    model = (model or os.getenv("OPENROUTER_MODEL") or "openai/gpt-oss-120b").strip()
+    base_url = _base_url()
+    resolved_model = (model or _default_model()).strip()
+    extra_body = _build_extra_body(thinking_level)
 
-    # Headers and provider metadata
-    extra_headers: Dict[str, str] = {
-        "Authorization": f"Bearer {api_key}",
-    }
-    if site_url or os.getenv("OPENROUTER_SITE_URL"):
-        extra_headers["HTTP-Referer"] = site_url or os.getenv("OPENROUTER_SITE_URL")  # type: ignore
-    if app_name or os.getenv("OPENROUTER_APP_NAME"):
-        extra_headers["X-Title"] = app_name or os.getenv("OPENROUTER_APP_NAME")  # type: ignore
-
-    extra_body: Dict[str, Any] = {}
-    if provider_order or provider_allow_fallbacks is not None:
-        extra_body["provider"] = {}
-        if provider_order:
-            extra_body["provider"]["order"] = provider_order
-        if provider_allow_fallbacks is not None:
-            extra_body["provider"]["allow_fallbacks"] = provider_allow_fallbacks
-    if provider_route:
-        extra_body["route"] = provider_route
-
-    # Try SDK first, then fallback to httpx
-    try:
-        from openai import OpenAI  # type: ignore
-
-        client = OpenAI(base_url=base_url, api_key=api_key)
-        resp = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            extra_headers=extra_headers or None,
-            extra_body=extra_body or None,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-        # Success via SDK
-        content = None
+    # Try OpenAI SDK first (Google's endpoint is OpenAI-compatible).
+    if not force_httpx:
         try:
-            content = resp.choices[0].message.content  # type: ignore[attr-defined]
-        except Exception:
-            pass
-        return {
-            "ok": True,
-            "content": content,
-            "raw": json.loads(resp.model_dump_json()),
-        }
-    except Exception as e:
-        if not (force_httpx or "401" in str(e) or "No auth credentials" in str(e)):
-            return {"error": f"SDK request failed: {e}"}
+            from openai import OpenAI  # type: ignore
 
-    # Fallback path
+            client = OpenAI(api_key=api_key, base_url=base_url)
+            resp = client.chat.completions.create(
+                model=resolved_model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                extra_body=extra_body or None,
+            )
+            content: Optional[str] = None
+            try:
+                content = resp.choices[0].message.content  # type: ignore[attr-defined]
+            except Exception:
+                pass
+            return {
+                "ok": True,
+                "model": resolved_model,
+                "content": content,
+                "raw": json.loads(resp.model_dump_json()),
+            }
+        except Exception as e:
+            err = str(e)
+            # Only fall through if it looks like an auth/credential failure.
+            if not ("401" in err or "No auth credentials" in err):
+                return {"error": f"SDK request failed: {e}"}
+
+    # httpx fallback
     import httpx  # type: ignore
 
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    for k in ("HTTP-Referer", "X-Title"):
-        if k in extra_headers:
-            headers[k] = extra_headers[k]
-
-    payload: Dict[str, Any] = {"model": model, "messages": messages}
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    payload: Dict[str, Any] = {"model": resolved_model, "messages": messages}
     if extra_body:
         payload.update(extra_body)
     if temperature is not None:
@@ -348,26 +339,48 @@ def _send_chat(
     if max_tokens is not None:
         payload["max_tokens"] = max_tokens
 
-    r = httpx.post(base_url.rstrip("/") + "/chat/completions", headers=headers, json=payload, timeout=60)
     try:
+        r = httpx.post(
+            base_url.rstrip("/") + "/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=120,
+        )
         r.raise_for_status()
-    except Exception:
-        return {"error": f"HTTP {r.status_code}: {r.text}"}
+    except Exception as e:
+        return {"error": f"HTTP request failed: {e}"}
+
     data = r.json()
     content = None
     try:
         content = data["choices"][0]["message"]["content"]
     except Exception:
         pass
-    return {"ok": True, "content": content, "raw": data}
+    return {"ok": True, "model": resolved_model, "content": content, "raw": data}
 
+
+# ---------------------------------------------------------------------------
+# SSE helper
+# ---------------------------------------------------------------------------
+
+def _sse(data: Dict[str, Any]) -> str:
+    return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
 
 @app.route("/health", methods=["GET"])
 def health() -> Any:
-    orc.load_env_file()
-    _ensure_keys_visible()
-    key_len = len((os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY") or "").strip())
-    return jsonify({"status": "ok", "key_present": key_len > 0})
+    gc.load_env_file()
+    api_key = _ensure_api_key()
+    return jsonify({
+        "status": "ok",
+        "key_present": len(api_key) > 0,
+        "model": _default_model(),
+        "provider": "gemma4",
+    })
 
 
 @app.route("/chat", methods=["POST"])
@@ -380,47 +393,31 @@ def chat() -> Any:
     model = body.get("model")
     temperature = body.get("temperature")
     max_tokens = body.get("max_tokens")
-    force_httpx = bool(body.get("force_httpx", False))
+    thinking_level = body.get("thinking_level") or os.getenv("GEMMA_THINKING_LEVEL", "").strip() or None
+    force_httpx = bool(body.get("force_httpx", False)) or _bool_env("GEMMA_FORCE_HTTPX")
     raw = bool(body.get("raw", False))
-
-    # Provider metadata and headers
-    site_url = body.get("site_url")
-    app_name = body.get("app_name")
-    provider = body.get("provider") or {}
-    provider_order = provider.get("order")
-    provider_allow_fallbacks = provider.get("allow_fallbacks")
-    provider_route = provider.get("route")
 
     msgs = _build_messages(prompt, system_prompt, messages)
     if not msgs:
         return jsonify({"error": "Missing 'prompt' or 'messages'"}), 400
 
-    # Append attachments (if any) to the last user message
     attachments = body.get("attachments") or []
     if attachments:
-        msgs = _append_attachments_to_messages(msgs, attachments, model)
+        msgs = _append_attachments_to_messages(msgs, attachments, model or _default_model())
 
     result = _send_chat(
         messages=msgs,
         model=model,
-        site_url=site_url,
-        app_name=app_name,
-        provider_order=provider_order,
-        provider_allow_fallbacks=provider_allow_fallbacks,
-        provider_route=provider_route,
         temperature=temperature,
         max_tokens=max_tokens,
-        force_httpx=force_httpx or _bool_env("OPENROUTER_FORCE_HTTPX"),
+        thinking_level=thinking_level,
+        force_httpx=force_httpx,
     )
 
-    status = 200 if result.get("ok") else 400
+    status_code = 200 if result.get("ok") else 400
     if result.get("ok") and not raw:
-        return jsonify({"content": result.get("content")}), status
-    return jsonify(result), status
-
-
-def _sse(data: Dict[str, Any]) -> str:
-    return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+        return jsonify({"content": result.get("content"), "model": result.get("model")}), status_code
+    return jsonify(result), status_code
 
 
 @app.route("/chat/stream", methods=["POST"])
@@ -433,97 +430,76 @@ def chat_stream() -> Any:
     model = body.get("model")
     temperature = body.get("temperature")
     max_tokens = body.get("max_tokens")
-    force_httpx = bool(body.get("force_httpx", False))
+    thinking_level = body.get("thinking_level") or os.getenv("GEMMA_THINKING_LEVEL", "").strip() or None
+    force_httpx = bool(body.get("force_httpx", False)) or _bool_env("GEMMA_FORCE_HTTPX")
     raw = bool(body.get("raw", False))
-
-    site_url = body.get("site_url")
-    app_name = body.get("app_name")
-    provider = body.get("provider") or {}
-    provider_order = provider.get("order")
-    provider_allow_fallbacks = provider.get("allow_fallbacks")
-    provider_route = provider.get("route")
 
     msgs = _build_messages(prompt, system_prompt, messages)
     if not msgs:
         return jsonify({"error": "Missing 'prompt' or 'messages'"}), 400
 
-    # Append attachments (if any) to the last user message
     attachments = body.get("attachments") or []
     if attachments:
-        msgs = _append_attachments_to_messages(msgs, attachments, model)
+        msgs = _append_attachments_to_messages(msgs, attachments, model or _default_model())
 
-    # Shared setup
-    orc.load_env_file()
-    _ensure_keys_visible()
-    api_key = (os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY") or "").strip()
+    # Resolve credentials once before entering the generator.
+    gc.load_env_file()
+    api_key = _ensure_api_key()
     if not api_key:
-        return jsonify({"error": "Missing OPENROUTER_API_KEY/OPENAI_API_KEY"}), 400
-    base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").strip()
-    model = (model or os.getenv("OPENROUTER_MODEL") or "openai/gpt-oss-120b").strip()
+        return jsonify({"error": "Missing GEMMA_API_KEY"}), 400
 
-    extra_headers: Dict[str, str] = {
-        "Authorization": f"Bearer {api_key}",
-    }
-    if site_url or os.getenv("OPENROUTER_SITE_URL"):
-        extra_headers["HTTP-Referer"] = site_url or os.getenv("OPENROUTER_SITE_URL")  # type: ignore
-    if app_name or os.getenv("OPENROUTER_APP_NAME"):
-        extra_headers["X-Title"] = app_name or os.getenv("OPENROUTER_APP_NAME")  # type: ignore
+    base_url = _base_url()
+    resolved_model = (model or _default_model()).strip()
+    extra_body = _build_extra_body(thinking_level)
 
-    extra_body: Dict[str, Any] = {}
-    if provider_order or provider_allow_fallbacks is not None:
-        extra_body["provider"] = {}
-        if provider_order:
-            extra_body["provider"]["order"] = provider_order
-        if provider_allow_fallbacks is not None:
-            extra_body["provider"]["allow_fallbacks"] = provider_allow_fallbacks
-    if provider_route:
-        extra_body["route"] = provider_route
-
-    def stream_with_sdk() -> Any:
+    def stream_with_sdk():
         from openai import OpenAI  # type: ignore
 
-        client = OpenAI(base_url=base_url, api_key=api_key)
-        yield _sse({"ok": True, "model": model, "begin": True})
+        client = OpenAI(api_key=api_key, base_url=base_url)
+        yield _sse({"ok": True, "model": resolved_model, "begin": True})
         try:
             resp = client.chat.completions.create(
-                model=model,
+                model=resolved_model,
                 messages=msgs,
-                extra_headers=extra_headers or None,
-                extra_body=extra_body or None,
                 temperature=temperature,
                 max_tokens=max_tokens,
+                extra_body=extra_body or None,
                 stream=True,
             )
             for chunk in resp:
                 try:
                     choice = chunk.choices[0]
                     delta = getattr(choice, "delta", None)
-                    content = None
-                    if delta is not None:
-                        content = getattr(delta, "content", None)
+                    content_delta = getattr(delta, "content", None) if delta is not None else None
                     if raw:
                         yield _sse(json.loads(chunk.model_dump_json()))
-                    elif content:
-                        yield _sse({"delta": content})
+                    elif content_delta:
+                        yield _sse({"delta": content_delta})
                     if getattr(choice, "finish_reason", None):
                         break
                 except Exception:
                     if raw:
-                        yield _sse(json.loads(chunk.model_dump_json()))
+                        try:
+                            yield _sse(json.loads(chunk.model_dump_json()))
+                        except Exception:
+                            pass
             yield _sse({"done": True})
         except Exception as e:
-            # Signal error to caller and let them retry with force_httpx
             yield _sse({"ok": False, "error": f"SDK stream failed: {e}"})
 
-    def stream_with_httpx() -> Any:
+    def stream_with_httpx():
         import httpx  # type: ignore
 
         url = base_url.rstrip("/") + "/chat/completions"
-        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-        for k in ("HTTP-Referer", "X-Title"):
-            if k in extra_headers:
-                headers[k] = extra_headers[k]
-        payload: Dict[str, Any] = {"model": model, "messages": msgs, "stream": True}
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+        payload: Dict[str, Any] = {
+            "model": resolved_model,
+            "messages": msgs,
+            "stream": True,
+        }
         if extra_body:
             payload.update(extra_body)
         if temperature is not None:
@@ -531,55 +507,54 @@ def chat_stream() -> Any:
         if max_tokens is not None:
             payload["max_tokens"] = max_tokens
 
-        yield _sse({"ok": True, "model": model, "begin": True})
-        with httpx.Client(timeout=None) as client:
-            with client.stream("POST", url, headers=headers, json=payload) as r:
-                if r.status_code != 200:
-                    yield _sse({"ok": False, "error": f"HTTP {r.status_code}: {r.text}"})
-                    return
-                buffer = ""
-                for line in r.iter_text():
-                    if not line:
-                        continue
-                    # SSE format: lines starting with 'data: '
-                    if line.startswith("data: "):
-                        data = line[len("data: "):].strip()
-                        if data == "[DONE]":
-                            break
-                        try:
-                            obj = json.loads(data)
-                        except Exception:
+        yield _sse({"ok": True, "model": resolved_model, "begin": True})
+        try:
+            with httpx.Client(timeout=None) as client:
+                with client.stream("POST", url, headers=headers, json=payload) as r:
+                    if r.status_code != 200:
+                        yield _sse({"ok": False, "error": f"HTTP {r.status_code}"})
+                        return
+                    for line in r.iter_text():
+                        if not line:
                             continue
-                        if raw:
-                            yield _sse(obj)
-                        else:
+                        if line.startswith("data: "):
+                            data_str = line[len("data: "):].strip()
+                            if data_str == "[DONE]":
+                                break
                             try:
-                                delta = obj["choices"][0]["delta"].get("content")
-                                if delta:
-                                    yield _sse({"delta": delta})
+                                obj = json.loads(data_str)
                             except Exception:
-                                pass
-        yield _sse({"done": True})
+                                continue
+                            if raw:
+                                yield _sse(obj)
+                            else:
+                                try:
+                                    delta = obj["choices"][0]["delta"].get("content")
+                                    if delta:
+                                        yield _sse({"delta": delta})
+                                except Exception:
+                                    pass
+            yield _sse({"done": True})
+        except Exception as e:
+            yield _sse({"ok": False, "error": f"httpx stream failed: {e}"})
 
-    # Choose path: stream via SDK first unless forced to httpx
     generator = stream_with_httpx() if force_httpx else stream_with_sdk()
-    headers = {
+    sse_headers = {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
         "Connection": "keep-alive",
         "X-Accel-Buffering": "no",
     }
-    return Response(generator, headers=headers)
+    return Response(generator, headers=sse_headers)
 
 
 @app.route("/upload", methods=["POST"])
 def upload() -> Any:
-    # Expect multipart/form-data with one or more 'files'
     if not request.files:
         return jsonify({"ok": False, "error": "No files provided"}), 400
+
     files = request.files.getlist("files") or []
     if not files:
-        # Allow single unnamed file (first value in dict)
         try:
             files = list(request.files.values())
         except Exception:
@@ -590,10 +565,10 @@ def upload() -> Any:
     saved: List[Dict[str, Any]] = []
     for fs in files:
         try:
-            meta = _save_upload(fs)
-            saved.append(meta)
+            saved.append(_save_upload(fs))
         except Exception as e:
             return jsonify({"ok": False, "error": f"Failed to save file: {e}"}), 400
+
     return jsonify({"ok": True, "files": saved})
 
 
@@ -602,13 +577,14 @@ def get_file(file_id: str) -> Any:
     meta = _resolve_upload(file_id)
     if not meta:
         return jsonify({"error": "Not found"}), 404
-    # send the file with original name
     return send_file(meta["path"], as_attachment=True, download_name=meta["name"])  # type: ignore
 
 
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
 if __name__ == "__main__":
-    # Load .env early for local runs
-    orc.load_env_file()
-    _ensure_keys_visible()
+    gc.load_env_file()
     port = int(os.getenv("PORT", "8000"))
     app.run(host="0.0.0.0", port=port, debug=_bool_env("FLASK_DEBUG"))

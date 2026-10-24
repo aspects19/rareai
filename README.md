@@ -1,12 +1,12 @@
 # TrialTwin — Rare Disease AI (Demo)
 
-A small full‑stack demo for AI symptom analysis with a Flask backend and a Vite/React frontend.
+A full-stack demo for AI symptom analysis with a Flask backend and a Vite/React frontend.
 
-- Backend: `flask_app.py` bridges to OpenRouter’s Chat Completions API (via the OpenAI Python SDK or httpx fallback) and supports SSE streaming, file uploads, and simple health checks.
-- Frontend: `trialtwin/client` is a Vite + React UI that streams responses, shows chat history, and supports attaching small text files.
-- CLI helper: `openrouter_chat.py` provides a terminal script to send a single prompt using the same environment configuration.
+- Backend: `flask_app.py` connects to Google's Gemma 4 API via the OpenAI-compatible endpoint. Supports SSE streaming, file uploads, multimodal attachments, and chain-of-thought (thinking) control.
+- Frontend: `rareai/client` is a Vite + React UI that streams responses, shows chat history, and supports attaching small text files.
+- CLI helpers: `gemma_chat.py` for Gemma 4 one-shot prompts; `openrouter_chat.py` for legacy OpenRouter testing.
 
-This project keeps credentials on the server. The frontend calls the backend (proxied to `http://localhost:8000`) — no API keys are exposed in the browser.
+Credentials are kept server-side only. The frontend proxies through `/api/*` — no API keys exposed in the browser.
 
 ## Quick Start
 
@@ -16,24 +16,29 @@ This project keeps credentials on the server. The frontend calls the backend (pr
 
 ### 1) Backend
 
-- Install Python deps:
-  - `python3 -m pip install -r requirements.txt`
-- Create `.env` in the repo root (see example below). At minimum set `OPENROUTER_API_KEY`.
-- Start the API server:
-  - `python3 flask_app.py`
-  - Server listens on `http://localhost:8000` by default.
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+Create `.env` in the repo root (see example below). At minimum set `GEMMA_API_KEY`.
+
+```bash
+python3 flask_app.py
+# Server listens on http://localhost:8000
+```
 
 Example `.env` (do not commit real keys):
 ```
-# Required
-OPENROUTER_API_KEY=sk-or-...     # or set OPENAI_API_KEY with the same value
+# Required — get your key at https://aistudio.google.com/app/apikey
+GEMMA_API_KEY=AIza...
 
 # Optional
-OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-OPENROUTER_MODEL=openai/gpt-oss-120b
-OPENROUTER_SITE_URL=http://localhost:5173   # sets HTTP-Referer header
-OPENROUTER_APP_NAME=TrialTwin (Dev)         # sets X-Title header
-OPENROUTER_FORCE_HTTPX=false                # force httpx fallback path
+GEMMA_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+GEMMA_MODEL=gemma-4-31b-it
+GEMMA_TEMPERATURE=0.7
+GEMMA_MAX_TOKENS=4096
+GEMMA_THINKING_LEVEL=medium   # high | medium | low | minimal (enables chain-of-thought)
+GEMMA_FORCE_HTTPX=false       # force httpx fallback path
 
 # Flask / server
 PORT=8000
@@ -41,58 +46,67 @@ FLASK_DEBUG=1
 UPLOAD_DIR=uploads
 ```
 
-Health check: `curl http://localhost:8000/health` → `{ "status": "ok", "key_present": true }`
+Health check:
+```bash
+curl http://localhost:8000/health
+# → { "status": "ok", "key_present": true, "model": "gemma-4-31b-it", "provider": "gemma4" }
+```
 
 ### 2) Frontend
 
-- `cd trialtwin/client`
-- `npm install`
-- `npm run dev`
-- Open `http://localhost:5173`.
+```bash
+cd rareai/client
+npm install
+npm run dev
+```
 
-The dev server proxies `/api/*` to the backend (see `trialtwin/client/vite.config.ts`). If you change ports, update that proxy.
+Open `http://localhost:5173`. The dev server proxies `/api/*` to the backend (`rareai/client/vite.config.ts`). Update the proxy port if you change `PORT`.
 
 ### 3) CLI (optional)
 
-- `python3 openrouter_chat.py "What are common causes of vertigo?"`
-- Uses the same `.env` variables as the backend. Set `OUTPUT_JSON=1` to print raw JSON.
+```bash
+python3 gemma_chat.py "What are common causes of vertigo?"
+```
+
+Uses the same `.env` variables as the backend. Set `OUTPUT_JSON=1` to print the raw API response.
 
 ## Project Structure
 
-- `flask_app.py` — Flask API server (chat, streaming, uploads, health).
-- `openrouter_chat.py` — Simple CLI for one‑shot prompts.
-- `trialtwin/client` — Vite + React frontend (streaming chat UI with file attachments).
-- `uploads/` — Saved file uploads (created automatically; configurable via `UPLOAD_DIR`).
-- `requirements.txt` — Python dependencies.
-- `.env` — Local environment (not checked in).
-- `code/` — A vendored developer tool repo (not required to run the app).
+```
+flask_app.py          — Flask API server (chat, streaming, uploads, health)
+gemma_chat.py         — CLI helper for one-shot Gemma 4 prompts
+openrouter_chat.py    — Legacy CLI helper (OpenRouter / OpenAI)
+rareai/client/        — Vite + React frontend
+uploads/              — Saved file uploads (auto-created; configurable via UPLOAD_DIR)
+requirements.txt      — Python dependencies
+.env                  — Local environment (not checked in)
+code/                 — Vendored developer tool repo (not required to run the app)
+```
 
-## API
+## API Reference
 
 Base URL defaults to `http://localhost:8000`.
 
 ### Health
 - `GET /health`
-- Response: `{ "status": "ok", "key_present": boolean }`
+- Response: `{ "status": "ok", "key_present": boolean, "model": string, "provider": "gemma4" }`
 
-### Chat (non‑streaming)
+### Chat (non-streaming)
 - `POST /chat`
 - Body (JSON):
-  - `prompt?: string` — Quick way to send a single user message
+  - `prompt?: string` — Quick single user message
   - `system?: string` — Optional system instruction
-  - `messages?: { role: 'system'|'user'|'assistant', content: string }[]` — Full chat history
-  - `model?: string` — Defaults to `openai/gpt-oss-120b`
+  - `messages?: { role: 'system'|'user'|'assistant', content: string }[]` — Full history
+  - `model?: string` — Defaults to `GEMMA_MODEL` env var or `gemma-4-31b-it`
   - `temperature?: number`, `max_tokens?: number`
-  - `attachments?: Attachment[]` (see “Attachments”)
-  - `provider?: { order?: string[]; allow_fallbacks?: boolean }` — OpenRouter routing hints
-  - `route?: object` — Advanced provider routing metadata
-  - `force_httpx?: boolean` — Force httpx fallback
-  - `raw?: boolean` — If true, returns full provider JSON
-- Success response (default): `{ content: string }`.
-- With `raw: true`: `{ ok: true, content?: string, raw: any }`.
+  - `thinking_level?: "high"|"medium"|"low"|"minimal"` — Enable Gemma 4 chain-of-thought
+  - `attachments?: Attachment[]` (see Attachments section below)
+  - `force_httpx?: boolean` — Skip SDK, use httpx directly
+  - `raw?: boolean` — Return full provider JSON instead of just `content`
+- Success response: `{ content: string, model: string }`
+- With `raw: true`: `{ ok: true, model: string, content?: string, raw: any }`
 
-Example:
-```
+```bash
 curl -X POST http://localhost:8000/chat \
   -H 'Content-Type: application/json' \
   -d '{
@@ -101,89 +115,86 @@ curl -X POST http://localhost:8000/chat \
           {"role":"user","content":"Summarize influenza symptoms."}
         ],
         "temperature": 0.3,
-        "max_tokens": 300
+        "max_tokens": 300,
+        "thinking_level": "low"
       }'
 ```
 
 ### Chat (SSE streaming)
-- `POST /chat/stream` (Server‑Sent Events)
-- Emits lines like:
-  - `data: {"ok":true,"model":"...","begin":true}` (start)
-  - `data: {"delta":"text chunk"}` (repeated)
-  - `data: {"done":true}` (end)
-- On error the server emits: `data: {"ok":false, "error":"..."}`
+- `POST /chat/stream`
+- Same body as `/chat`. Emits Server-Sent Events:
+  - `data: {"ok":true,"model":"gemma-4-31b-it","begin":true}` — session start
+  - `data: {"delta":"token text"}` — repeated content chunks
+  - `data: {"done":true}` — end of stream
+  - `data: {"ok":false,"error":"..."}` — on error
 
-Example (terminal):
-```
+```bash
 curl -N -s http://localhost:8000/chat/stream \
   -H 'Content-Type: application/json' \
   -d '{
-        "messages": [
-          {"role":"user","content":"List causes of chronic cough"}
-        ],
+        "messages": [{"role":"user","content":"List causes of chronic cough"}],
         "temperature": 0.2
       }'
 ```
 
 ### File Uploads
-- `POST /upload` (multipart/form‑data)
-  - Field name: `files` (can be multiple)
+- `POST /upload` (multipart/form-data, field name: `files`)
 - Response: `{ ok: true, files: Attachment[] }`
-- `Attachment` object:
-  - `{ id: string, name: string, size: number, mimetype: string }`
+- `Attachment`: `{ id: string, name: string, size: number, mimetype: string }`
 
-Example:
-```
+```bash
 curl -F 'files=@/path/to/notes.txt' http://localhost:8000/upload
-# → { "ok": true, "files": [{"id":"...","name":"notes.txt", ...}] }
 ```
 
 ### Download Uploaded File
-- `GET /files/<id>` — Returns the original file as an attachment.
+- `GET /files/<id>` — Returns the original file as a download.
 
 ## Attachments
 
-Pass `attachments` to `/chat` or `/chat/stream` as an array of objects. Each object can be either:
-- An uploaded file reference: `{ id: string }` from `/upload` (the server resolves metadata), or
-- A local file path (server‑side only): `{ path: "/absolute/or/relative/path" }` (for local testing only).
+Pass `attachments` in `/chat` or `/chat/stream` as an array:
+- Uploaded file: `{ "id": "<id from /upload>" }`
+- Server-local path (dev/testing only): `{ "path": "/absolute/path/to/file" }`
 
 Behavior:
-- Small text‑like files (e.g., `.txt`, `.md`, `.csv`, `.json`, `text/*`, `application/json`) are inlined directly into the last user message as a fenced code block (size limits apply, default ~512 KB).
-- Images under 5 MB are attached as multimodal parts for models that support images (e.g., `gpt-4o`, `gpt-4.1`, `-vl`, etc.).
-- Larger or non‑text files are noted by filename and size, but not inlined.
+- Text-like files (`.txt`, `.md`, `.csv`, `.json`, `text/*`) ≤ 512 KB are inlined as fenced code blocks.
+- Images ≤ 5 MB are attached as multimodal `image_url` parts for vision-capable models (Gemma 4 is multimodal by default).
+- Larger or binary files are mentioned by name/size but not inlined.
 
-## Configuration
+## Gemma 4 Thinking (Chain-of-Thought)
 
-Environment variables (all optional unless noted):
-- `OPENROUTER_API_KEY` (or `OPENAI_API_KEY`) — Required. Your OpenRouter key.
-- `OPENROUTER_BASE_URL` — Default `https://openrouter.ai/api/v1`.
-- `OPENROUTER_MODEL` — Default `openai/gpt-oss-120b`.
-- `OPENROUTER_SITE_URL` — Sent as `HTTP-Referer` header (recommended by OpenRouter).
-- `OPENROUTER_APP_NAME` — Sent as `X-Title` header.
-- `OPENROUTER_FORCE_HTTPX` — `true/false` to force httpx path.
-- `PORT` — Flask port (default `8000`).
-- `FLASK_DEBUG` — `1` to enable Flask debug.
-- `UPLOAD_DIR` — Directory to store uploads (default `uploads/`).
+Set `thinking_level` in the request body or `GEMMA_THINKING_LEVEL` in `.env`:
 
-Notes:
-- The backend mirrors `OPENROUTER_API_KEY` and `OPENAI_API_KEY` so either name works.
-- For provider routing, you can pass `provider.order` (e.g., `["openai","google"]`) and `provider.allow_fallbacks` in the request body; you can also pass a `route` object for advanced rules.
+| Level | Behavior |
+|-------|----------|
+| `high` | Maximum reasoning effort |
+| `medium` | Balanced reasoning |
+| `low` | Light reasoning |
+| `minimal` | Minimal overhead |
+| *(omit)* | Model default |
 
-## Frontend Notes
+## Configuration Reference
 
-- The UI streams from `/api/chat/stream` and shows incremental tokens.
-- If streaming fails (e.g. proxies), it attempts a non‑streaming fallback.
-- A health banner appears if the backend is unreachable or if the server is missing credentials.
-- The UI attaches files with `/api/upload` then sends attachment references to the chat endpoint.
+| Variable | Default | Description |
+|---|---|---|
+| `GEMMA_API_KEY` | — | **Required.** Google AI Studio key |
+| `GEMMA_BASE_URL` | `https://generativelanguage.googleapis.com/v1beta/openai/` | API base URL |
+| `GEMMA_MODEL` | `gemma-4-31b-it` | Model slug |
+| `GEMMA_TEMPERATURE` | — | Generation temperature |
+| `GEMMA_MAX_TOKENS` | — | Max output tokens |
+| `GEMMA_THINKING_LEVEL` | — | Chain-of-thought level |
+| `GEMMA_FORCE_HTTPX` | `false` | Skip SDK, use httpx directly |
+| `PORT` | `8000` | Flask listening port |
+| `FLASK_DEBUG` | — | `1` to enable debug mode |
+| `UPLOAD_DIR` | `./uploads` | File upload directory |
 
 ## Troubleshooting
 
-- 401 / credential errors: ensure `.env` has a valid `OPENROUTER_API_KEY` (or `OPENAI_API_KEY`) and restart the backend.
-- Backend not reachable: run `python3 flask_app.py` and visit `http://localhost:8000/health`.
-- Streaming through corporate proxies: use the non‑streaming `/chat` endpoint or the UI’s built‑in fallback.
-- Large files won’t inline; the server will note them by name and size.
+- **401 / credential errors**: ensure `.env` has a valid `GEMMA_API_KEY` and restart the backend.
+- **Backend not reachable**: run `python3 flask_app.py`, then hit `http://localhost:8000/health`.
+- **Streaming through corporate proxies**: use `/chat` (non-streaming) or set `force_httpx: true`.
+- **Large files not inlined**: the server notes them by name/size but won't block the request.
+- **Model not found**: verify the slug at [Google AI Studio](https://aistudio.google.com/models) and set `GEMMA_MODEL`.
 
 ## Safety & Disclaimer
 
-This demo produces AI‑generated suggestions and is not medical advice. Always consult healthcare professionals for diagnosis and treatment.
-
+This demo produces AI-generated suggestions and is **not medical advice**. Always consult healthcare professionals for diagnosis and treatment.
