@@ -1,0 +1,5 @@
+# OS / IDE junk only
+.DS_Store
+.idea/
+.vscode/
+.env

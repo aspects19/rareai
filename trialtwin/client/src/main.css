@@ -1,0 +1,199 @@
+@import "tailwindcss";
+
+/* Base typography and rendering */
+:root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  /* default to light; dark handled by media query */
+  color-scheme: light;
+  color: #1f2937; /* text color fallback */
+  background-color: #ffffff; /* background fallback */
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* --------------------------------------------
+   Gradient tokens (colors and composites)
+   -------------------------------------------- */
+:root {
+  /* Primary brand hues (calm medical → teal/blue/indigo) */
+  --brand-teal: hsl(188 78% 41%);   /* teal-500 */
+  --brand-blue: hsl(201 96% 48%);   /* sky-500 */
+  --brand-indigo: hsl(243 75% 59%); /* indigo-500 */
+
+  /* App background gradient (light) — boosted visibility */
+  --gradient-app: radial-gradient(48% 48% at 12% -8%, hsl(201 100% 92% / 0.95) 0%, transparent 65%),
+                   radial-gradient(42% 42% at 88% 12%, hsl(188 95% 84% / 0.9) 0%, transparent 60%),
+                   radial-gradient(50% 50% at 18% 88%, hsl(260 85% 90% / 0.85) 0%, transparent 62%),
+                   linear-gradient(120deg, hsl(210 100% 99%) 0%, hsl(210 100% 97%) 50%, hsl(240 100% 98%) 100%);
+
+  /* Optional even-stronger variant if needed */
+  --gradient-app-strong: radial-gradient(55% 55% at 18% -10%, hsl(201 100% 90% / 0.98) 0%, transparent 68%),
+                         radial-gradient(48% 48% at 85% 18%, hsl(188 95% 82% / 0.95) 0%, transparent 62%),
+                         radial-gradient(55% 55% at 12% 92%, hsl(260 85% 88% / 0.9) 0%, transparent 64%),
+                         radial-gradient(35% 35% at 60% 50%, hsl(210 100% 95% / 0.75) 0%, transparent 65%),
+                         linear-gradient(120deg, hsl(210 100% 99%) 0%, hsl(210 100% 96%) 50%, hsl(240 100% 98%) 100%);
+
+  /* Primary chip/avatars */
+  --gradient-primary: linear-gradient(135deg, var(--brand-teal) 0%, var(--brand-indigo) 100%);
+
+  /* Hero CTA (slightly bolder) */
+  --gradient-hero: linear-gradient(135deg, hsl(188 85% 45%) 0%, hsl(243 80% 55%) 52%, hsl(260 85% 60%) 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    color: #e5e7eb; /* text fallback */
+    background-color: #0b1020; /* bg fallback */
+
+    /* Dark mode: deeper wash with stronger presence */
+    --gradient-app: radial-gradient(46% 46% at 15% -8%, hsl(210 100% 22% / 0.75) 0%, transparent 65%),
+                     radial-gradient(40% 40% at 88% 6%, hsl(188 90% 28% / 0.55) 0%, transparent 58%),
+                     radial-gradient(50% 50% at 10% 94%, hsl(260 90% 30% / 0.55) 0%, transparent 62%),
+                     linear-gradient(180deg, #0b1020 0%, #0b1224 100%);
+
+    --gradient-app-strong: radial-gradient(55% 55% at 18% -10%, hsl(210 100% 24% / 0.85) 0%, transparent 68%),
+                           radial-gradient(48% 48% at 85% 10%, hsl(188 90% 30% / 0.65) 0%, transparent 62%),
+                           radial-gradient(55% 55% at 10% 92%, hsl(260 90% 32% / 0.65) 0%, transparent 64%),
+                           linear-gradient(180deg, #0b1020 0%, #0b1224 100%);
+
+    /* Slightly cooled brand hues for dark */
+    --brand-teal: hsl(188 70% 45%);
+    --brand-blue: hsl(201 93% 50%);
+    --brand-indigo: hsl(243 78% 62%);
+    --gradient-primary: linear-gradient(135deg, var(--brand-teal) 0%, var(--brand-indigo) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(188 85% 45%) 0%, hsl(243 80% 56%) 52%, hsl(260 85% 62%) 100%);
+  }
+}
+
+/* --------------------------------------------
+   Utilities for gradients and glass surfaces
+   -------------------------------------------- */
+@layer utilities {
+  .bg-gradient-app {
+    background: var(--gradient-app);
+    background-attachment: fixed; /* subtle parallax and less repainting */
+  }
+
+  .bg-gradient-app-strong {
+    background: var(--gradient-app-strong);
+    background-attachment: fixed;
+  }
+
+  .bg-gradient-primary {
+    background: var(--gradient-primary);
+    color: white;
+  }
+
+  .bg-gradient-hero {
+    background: var(--gradient-hero);
+    color: white;
+  }
+
+  /* Optional utility for translucent surfaces over gradients */
+  .glass-surface {
+    background-color: color-mix(in oklab, white 75%, transparent);
+    -webkit-backdrop-filter: saturate(140%) blur(10px);
+    backdrop-filter: saturate(140%) blur(10px);
+  }
+}
+
+/* --------------------------------------------
+   Chat bubble tokens and components
+   -------------------------------------------- */
+@layer base {
+  :root {
+    /* Sizes */
+    --bubble-max-width: 68ch;
+    --bubble-pad: 12px;
+
+    /* Light theme bubble colors */
+    --bubble-user-bg: hsl(201 96% 47% / 0.98); /* sky-500-ish */
+    --bubble-user-text: #ffffff;
+    --bubble-assistant-bg: hsl(220 16% 97%);   /* near-muted */
+    --bubble-assistant-text: #1f2937;          /* slate-800 */
+    --bubble-assistant-border: hsl(220 14% 90%);
+    --bubble-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bubble-user-bg: hsl(201 96% 42% / 1);  /* slightly darker for contrast */
+      --bubble-user-text: #ffffff;
+      --bubble-assistant-bg: hsl(222 36% 12%);
+      --bubble-assistant-text: #e5e7eb;        /* slate-200 */
+      --bubble-assistant-border: hsl(222 40% 18%);
+      --bubble-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+  }
+}
+
+@layer components {
+  .bubble {
+    max-width: var(--bubble-max-width);
+    padding: var(--bubble-pad);
+    border-radius: 14px;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+  }
+  .bubble--assistant {
+    background: var(--bubble-assistant-bg);
+    color: var(--bubble-assistant-text);
+    border: 1px solid var(--bubble-assistant-border);
+    box-shadow: var(--bubble-shadow);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 14px;
+    border-bottom-right-radius: 14px;
+    border-bottom-left-radius: 8px;
+  }
+  .bubble--user {
+    background: var(--bubble-user-bg);
+    color: var(--bubble-user-text);
+    border: none;
+    box-shadow: var(--bubble-shadow);
+    border-top-left-radius: 14px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 14px;
+  }
+
+  .sender-label {
+    font-size: 11px;
+    line-height: 1;
+    color: color-mix(in oklab, currentColor 60%, transparent);
+  }
+
+  /* Subtle skeleton shimmer for loading bubble */
+  .bubble-skeleton {
+    position: relative;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+    background-size: 200% 100%;
+    animation: bubbleShimmer 1500ms ease-in-out infinite;
+  }
+  @media (prefers-color-scheme: light) {
+    .bubble-skeleton {
+      background: linear-gradient(90deg, transparent, rgba(0,0,0,0.04), transparent);
+      background-size: 200% 100%;
+    }
+  }
+  @keyframes bubbleShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+}

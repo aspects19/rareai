@@ -1,0 +1,354 @@
+rg: Cargo.toml: IO error for operation on Cargo.toml: No such file or directory (os error 2)
+codex-rs/login/src/assets/success.html:11:        --bg-page: #ffffff;
+codex-rs/login/src/assets/success.html:12:        --bg-primary: #ffffff;
+codex-rs/login/src/assets/success.html:16:        --interactive-label-primary-default: #ffffff;
+codex-rs/login/src/assets/success.html:24:          --text-primary: #f2f2f2;
+codex-rs/login/src/assets/success.html:26:          --interactive-bg-primary-default: #f2f2f2;
+codex-rs/config.md:241:If the selected model is known to support reasoning (for example: `o3`, `o4-mini`, `codex-*`, `gpt-5`), reasoning is enabled by default when using the Responses API. As explained in the [OpenAI Platform documentation](https://platform.openai.com/docs/guides/reasoning?api-mode=responses#get-started-with-reasoning), this can be set to:
+codex-rs/ollama/src/url.rs:21:mod tests {
+codex-rs/ollama/src/parser.rs:32:mod tests {
+codex-rs/login/Cargo.toml:32:[dev-dependencies]
+codex-rs/apply-patch/Cargo.toml:24:[dev-dependencies]
+codex-rs/apply-patch/src/seek_sequence.rs:113:mod tests {
+codex-rs/apply-patch/src/lib.rs:424:                    (#eq? @cd_name "cd")
+codex-rs/apply-patch/src/lib.rs:880:mod tests {
+codex-rs/ollama/src/client.rs:295:mod tests {
+codex-rs/chatgpt/Cargo.toml:19:[dev-dependencies]
+codex-rs/ollama/Cargo.toml:30:[dev-dependencies]
+codex-rs/git-tooling/src/ghost_commits.rs:186:mod tests {
+codex-rs/execpolicy/src/valid_exec.rs:34:        self.opts.iter().any(|opt| opt.r#type.might_write_file())
+codex-rs/execpolicy/src/valid_exec.rs:35:            || self.args.iter().any(|opt| opt.r#type.might_write_file())
+codex-rs/execpolicy/src/valid_exec.rs:42:    pub r#type: ArgType,
+codex-rs/execpolicy/src/valid_exec.rs:47:    pub fn new(index: usize, r#type: ArgType, value: &str) -> Result<Self> {
+codex-rs/execpolicy/src/valid_exec.rs:48:        r#type.validate(value)?;
+codex-rs/execpolicy/src/valid_exec.rs:51:            r#type,
+codex-rs/execpolicy/src/valid_exec.rs:65:    pub r#type: ArgType,
+codex-rs/execpolicy/src/valid_exec.rs:69:    pub fn new(name: &str, value: &str, r#type: ArgType) -> Result<Self> {
+codex-rs/execpolicy/src/valid_exec.rs:70:        r#type.validate(value)?;
+codex-rs/execpolicy/src/valid_exec.rs:74:            r#type,
+codex-rs/git-tooling/Cargo.toml:19:[dev-dependencies]
+codex-rs/mcp-client/src/mcp_client.rs:413:    // https://modelcontextprotocol.io/docs/tools/debugging#environment-variables
+codex-rs/mcp-client/src/mcp_client.rs:465:mod tests {
+codex-rs/file-search/src/lib.rs:412:mod tests {
+codex-rs/execpolicy/src/policy_parser.rs:215:    fn opt(name: String, r#type: ArgMatcher, required: Option<bool>) -> anyhow::Result<Opt> {
+codex-rs/execpolicy/src/policy_parser.rs:218:            OptMeta::Value(r#type.arg_type()),
+codex-rs/tui/src/markdown_render.rs:514:mod tests {
+codex-rs/cli/src/llm.rs:108:        r#type: args.format_type.clone(),
+codex-rs/browser/src/js/virtual_cursor.js:607:                el.style.cssText = 'position:fixed;bottom:8px;left:8px;background:rgba(0,0,0,0.6);color:#fff;padding:6px 8px;border-radius:6px;font:12px/1.4 -apple-system,Segoe UI,Arial;z-index:2147483647;pointer-events:none;white-space:pre;';
+codex-rs/cli/src/main.rs:987:mod tests {
+codex-rs/execpolicy/src/execv_checker.rs:54:            .map(|arg| (arg.r#type, arg.value))
+codex-rs/execpolicy/src/execv_checker.rs:59:                    .map(|opt| (opt.r#type, opt.value)),
+codex-rs/execpolicy/src/execv_checker.rs:143:mod tests {
+codex-rs/execpolicy/src/execv_checker.rs:162:        let parser = PolicyParser::new("#test", &source);
+codex-rs/cli/Cargo.toml:65:[dev-dependencies]
+codex-rs/exec/Cargo.toml:43:[dev-dependencies]
+codex-rs/cli/src/login.rs:156:mod tests {
+codex-rs/browser/Cargo.toml:35:[dev-dependencies]
+codex-rs/mcp-server/src/outgoing_message.rs:260:mod tests {
+codex-rs/mcp-types/src/lib.rs:58:    pub r#type: String, // &'static str = "audio"
+codex-rs/mcp-types/src/lib.rs:85:    pub r#type: String, // &'static str = "boolean"
+codex-rs/mcp-types/src/lib.rs:388:    pub r#type: String, // &'static str = "object"
+codex-rs/mcp-types/src/lib.rs:416:    pub r#type: String, // &'static str = "resource"
+codex-rs/mcp-types/src/lib.rs:432:    pub r#enum: Vec<String>,
+codex-rs/mcp-types/src/lib.rs:437:    pub r#type: String, // &'static str = "string"
+codex-rs/mcp-types/src/lib.rs:480:    pub r#type: String, // &'static str = "image"
+codex-rs/mcp-types/src/lib.rs:767:/// https://datatracker.ietf.org/doc/html/rfc5424#section-6.2.1
+codex-rs/mcp-types/src/lib.rs:866:    pub r#type: String,
+codex-rs/mcp-types/src/lib.rs:994:    pub r#type: String, // &'static str = "ref/prompt"
+codex-rs/mcp-types/src/lib.rs:1087:    pub r#type: String, // &'static str = "resource_link"
+codex-rs/mcp-types/src/lib.rs:1118:    pub r#type: String, // &'static str = "ref/resource"
+codex-rs/mcp-types/src/lib.rs:1309:    pub r#type: String, // &'static str = "string"
+codex-rs/mcp-types/src/lib.rs:1332:    pub r#type: String, // &'static str = "text"
+codex-rs/mcp-types/src/lib.rs:1371:    pub r#type: String, // &'static str = "object"
+codex-rs/mcp-types/src/lib.rs:1381:    pub r#type: String, // &'static str = "object"
+codex-rs/mcp-server/src/json_to_toml.rs:31:mod tests {
+codex-rs/tui/src/onboarding/auth.rs:283:                    "\u{1b}]8;;https://chatgpt.com/#settings\u{7}training data preferences\u{1b}]8;;\u{7}",
+codex-rs/protocol/src/mcp_protocol.rs:715:mod tests {
+codex-rs/mcp-server/src/message_processor.rs:552:                        r#type: "text".to_string(),
+codex-rs/mcp-server/src/message_processor.rs:572:                                r#type: "text".to_owned(),
+codex-rs/mcp-server/src/message_processor.rs:589:                            r#type: "text".to_owned(),
+codex-rs/mcp-server/src/message_processor.rs:604:                        r#type: "text".to_string(),
+codex-rs/mcp-server/src/message_processor.rs:657:                            r#type: "text".to_owned(),
+codex-rs/mcp-server/src/message_processor.rs:675:                        r#type: "text".to_owned(),
+codex-rs/mcp-server/src/message_processor.rs:693:                        r#type: "text".to_owned(),
+codex-rs/mcp-server/src/message_processor.rs:721:                        r#type: "text".to_owned(),
+codex-rs/mcp-server/src/message_processor.rs:849:                        r#type: "text".to_owned(),
+codex-rs/mcp-server/src/message_processor.rs:1188:                        r#type: "text".to_owned(),
+codex-rs/mcp-server/src/message_processor.rs:1210:                    r#type: "text".to_owned(),
+codex-rs/mcp-server/src/message_processor.rs:1250:                        r#type: "text".to_owned(),
+codex-rs/mcp-server/src/message_processor.rs:1277:                        r#type: "text".to_owned(),
+codex-rs/mcp-server/src/message_processor.rs:1294:                        r#type: "text".to_owned(),
+codex-rs/mcp-server/src/message_processor.rs:1323:                        r#type: "text".to_owned(),
+codex-rs/browser/src/page.rs:123:                        "level": format!("{:?}", evt.r#type),
+codex-rs/browser/src/page.rs:1505:            .r#type(DispatchMouseEventType::MouseMoved)
+codex-rs/browser/src/page.rs:1594:            .r#type(DispatchMouseEventType::MousePressed)
+codex-rs/browser/src/page.rs:1608:            .r#type(DispatchMouseEventType::MouseReleased)
+codex-rs/browser/src/page.rs:1643:            .r#type(DispatchMouseEventType::MousePressed)
+codex-rs/browser/src/page.rs:1677:            .r#type(DispatchMouseEventType::MouseReleased)
+codex-rs/browser/src/page.rs:1728:            .r#type(DispatchMouseEventType::MousePressed)
+codex-rs/browser/src/page.rs:1742:            .r#type(DispatchMouseEventType::MouseReleased)
+codex-rs/browser/src/page.rs:1930:                        .r#type(DispatchKeyEventType::Char)
+codex-rs/browser/src/page.rs:1976:            .r#type(DispatchKeyEventType::KeyDown)
+codex-rs/browser/src/page.rs:1993:                .r#type(DispatchKeyEventType::Char)
+codex-rs/browser/src/page.rs:2004:            .r#type(DispatchKeyEventType::KeyUp)
+codex-rs/protocol/src/config_types.rs:9:/// See https://platform.openai.com/docs/guides/reasoning?api-mode=responses#get-started-with-reasoning
+codex-rs/mcp-server/src/exec_approval.rs:70:            r#type: "object".to_string(),
+codex-rs/mcp-types/generate_mcp_types.py:674:        prop_name = "r#type"
+codex-rs/mcp-types/generate_mcp_types.py:678:        prop_name = "r#enum"
+codex-rs/mcp-server/src/acp_tool_runner.rs:44:                    r#type: "text".to_string(),
+codex-rs/protocol/src/models.rs:320:mod tests {
+codex-rs/mcp-server/src/patch_approval.rs:64:            r#type: "object".to_string(),
+codex-rs/tui/Cargo.toml:105:[dev-dependencies]
+codex-rs/mcp-server/src/codex_tool_config.rs:11:use schemars::r#gen::SchemaSettings;
+codex-rs/mcp-server/src/codex_tool_config.rs:140:        r#type: "object".to_string(),
+codex-rs/mcp-server/src/codex_tool_config.rs:149:        r#type: "object".to_string(),
+codex-rs/mcp-server/src/codex_tool_config.rs:167:        r#type: "object".to_string(),
+codex-rs/mcp-server/src/codex_tool_config.rs:189:        r#type: "object".to_string(),
+codex-rs/mcp-server/src/codex_tool_config.rs:330:mod tests {
+codex-rs/protocol/src/num_format.rs:75:mod tests {
+codex-rs/mcp-types/schema/2025-06-18/schema.json:32:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:81:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:160:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:396:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:517:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:614:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:648:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:748:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:772:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:860:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:897:                            "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:979:                            "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1010:                            "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1078:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1124:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1170:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1201:                            "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1224:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1266:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1286:            "description": "The severity of a log message.\n\nThese map to syslog message severities, as specified in RFC-5424:\nhttps://datatracker.ietf.org/doc/html/rfc5424#section-6.2.1",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1384:                            "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1447:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1469:                            "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1555:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1620:                            "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1702:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1734:                            "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1764:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1808:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1831:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1887:                            "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1904:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:1990:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:2009:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:2039:                            "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:2304:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:2330:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:2358:                    "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-types/schema/2025-06-18/schema.json:2476:                            "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+codex-rs/mcp-server/src/codex_tool_runner.rs:60:                    r#type: "text".to_string(),
+codex-rs/mcp-server/src/codex_tool_runner.rs:239:                                r#type: "text".to_string(),
+codex-rs/mcp-server/src/codex_tool_runner.rs:309:                        r#type: "text".to_string(),
+codex-rs/execpolicy/Cargo.toml:32:[dev-dependencies]
+codex-rs/common/src/elapsed.rs:78:mod tests {
+codex-rs/tui/src/rate_limits_view.rs:1018:mod tests {
+codex-rs/tui/src/snapshots/codex_tui__markdown_render__markdown_render_tests__markdown_render_complex_snapshot.snap:36:<div style="border:1px solid #ccc;padding:2px">inline block</div>
+codex-rs/protocol/Cargo.toml:33:[dev-dependencies]
+codex-rs/mcp-types/schema/2025-03-26/schema.json:1119:            "description": "The severity of a log message.\n\nThese map to syslog message severities, as specified in RFC-5424:\nhttps://datatracker.ietf.org/doc/html/rfc5424#section-6.2.1",
+codex-rs/protocol/src/protocol.rs:1347:mod tests {
+codex-rs/common/src/config_override.rs:145:mod tests {
+codex-rs/tui/src/diff_render.rs:689:mod tests {
+codex-rs/common/src/fuzzy_match.rs:81:mod tests {
+codex-rs/utils/readiness/src/lib.rs:172:mod tests {
+codex-rs/utils/readiness/Cargo.toml:12:[dev-dependencies]
+codex-rs/core/src/tool_apply_patch.rs:21:/// https://platform.openai.com/docs/guides/function-calling#custom-tools
+codex-rs/core/src/tool_apply_patch.rs:28:            r#type: "grammar".to_string(),
+codex-rs/core/src/custom_prompts.rs:77:mod tests {
+codex-rs/core/src/truncate.rs:108:mod tests {
+codex-rs/core/src/auth_accounts.rs:343:mod tests {
+codex-rs/core/src/safety.rs:267:mod tests {
+codex-rs/core/src/command_safety/windows_safe_commands.rs:7:mod tests {
+codex-rs/core/src/git_info.rs:587:mod tests {
+codex-rs/mcp-server/tests/suite/codex_tool.rs:332:                r#type: "object".to_string(),
+codex-rs/mcp-server/tests/suite/codex_tool.rs:542:                r#type: "object".to_string(),
+codex-rs/core/src/token_data.rs:153:mod tests {
+codex-rs/core/src/parse_command.rs:90:mod tests {
+codex-rs/core/src/parse_command.rs:821:            &shlex_split_safe(r#"cat "pkg\src\main.rs""#),
+codex-rs/core/src/command_safety/is_safe_command.rs:186:mod tests {
+codex-rs/core/src/mcp_connection_manager.rs:156:                                // https://modelcontextprotocol.io/specification/2025-06-18/client/elicitation#capabilities
+codex-rs/core/src/mcp_connection_manager.rs:327:mod tests {
+codex-rs/core/src/mcp_connection_manager.rs:341:                    r#type: "object".to_string(),
+codex-rs/core/src/config_edit.rs:404:mod tests {
+codex-rs/core/src/unified_exec/mod.rs:406:mod tests {
+codex-rs/core/src/user_notification.rs:65:mod tests {
+codex-rs/core/src/model_provider_info.rs:481:mod tests {
+codex-rs/core/src/codex/compact.rs:598:mod tests {
+codex-rs/core/src/project_doc.rs:177:mod tests {
+codex-rs/core/src/plan_tool.rs:217:mod tests {
+codex-rs/core/src/seatbelt.rs:134:mod tests {
+codex-rs/core/src/config.rs:2241:mod tests {
+codex-rs/core/src/rollout/mod.rs:20:pub mod tests;
+codex-rs/core/src/environment_context.rs:336:mod tests {
+codex-rs/core/src/config_types.rs:836:    pub r#set: Option<HashMap<String, String>>,
+codex-rs/core/src/config_types.rs:851:/// 4. Insert any entries from `r#set` into the map.
+codex-rs/core/src/config_types.rs:866:    pub r#set: HashMap<String, String>,
+codex-rs/core/src/config_types.rs:886:        let r#set = toml.r#set.unwrap_or_default();
+codex-rs/core/src/config_types.rs:899:            r#set,
+codex-rs/core/src/config_types.rs:906:/// See https://platform.openai.com/docs/guides/reasoning?api-mode=responses#get-started-with-reasoning
+codex-rs/core/src/error.rs:248:mod tests {
+codex-rs/tui/src/text_processing.rs:132:mod tests {
+codex-rs/core/src/event_mapping.rs:89:mod tests {
+codex-rs/mcp-server/Cargo.toml:42:[dev-dependencies]
+codex-rs/core/src/auth.rs:494:mod tests {
+codex-rs/core/src/exec_env.rs:59:    for (key, val) in &policy.r#set {
+codex-rs/core/src/exec_env.rs:72:mod tests {
+codex-rs/core/src/exec_env.rs:132:        policy.r#set.insert("NEW_VAR".to_string(), "42".to_string());
+codex-rs/core/src/exec_env.rs:185:            .r#set
+codex-rs/tui/src/markdown.rs:396:mod tests {
+codex-rs/core/src/client.rs:61:    r#type: Option<String>,
+codex-rs/core/src/client.rs:247:                r#type: "json_schema".to_string(),
+codex-rs/core/src/client.rs:494:                            if error.r#type.as_deref() == Some("usage_limit_reached") {
+codex-rs/core/src/client.rs:506:                            } else if error.r#type.as_deref() == Some("usage_not_included") {
+codex-rs/core/src/client.rs:1156:mod tests {
+codex-rs/core/src/client.rs:1501:            r#type: None,
+codex-rs/core/src/client.rs:1515:            r#type: None,
+codex-rs/core/src/conversation_manager.rs:235:mod tests {
+codex-rs/core/src/conversation_history.rs:54:mod tests {
+codex-rs/core/src/codex.rs:4519:                if let Some(si) = summary_index { event_id = format!("{}#s{}", event_id, si); }
+codex-rs/core/src/codex.rs:4535:                    if let Some(ci) = content_index { event_id = format!("{}#c{}", event_id, ci); }
+codex-rs/core/src/codex.rs:4606:                let eid = format!("{}#s{}", event_id, i);
+codex-rs/core/Cargo.toml:92:[dev-dependencies]
+codex-rs/core/src/protocol.rs:1283:mod tests {
+codex-rs/core/src/turn_diff_tracker.rs:468:mod tests {
+codex-rs/tui/src/markdown_stream.rs:672:mod tests {
+codex-rs/core/src/shell.rs:237:mod tests {
+codex-rs/core/src/shell.rs:500:mod tests_windows {
+codex-rs/core/src/default_client.rs:88:mod tests {
+codex-rs/core/src/bash.rs:138:mod tests {
+codex-rs/tui/src/markdown_render_tests.rs:814:<div style="border:1px solid #ccc;padding:2px">inline block</div>
+codex-rs/core/src/exec_command/session_manager.rs:476:mod tests {
+codex-rs/core/src/client_common.rs:318:    pub r#type: String, // e.g. "json_schema"
+codex-rs/core/src/client_common.rs:446:mod tests {
+codex-rs/core/src/client_common.rs:562:                    r#type: "json_schema".to_string(),
+codex-rs/tui/src/updates.rs:378:mod tests {
+codex-rs/core/src/openai_tools.rs:41:    pub(crate) r#type: String,
+codex-rs/core/src/openai_tools.rs:685:mod tests {
+codex-rs/core/src/openai_tools.rs:857:                        r#type: "object".to_string(),
+codex-rs/core/src/openai_tools.rs:975:                        r#type: "object".to_string(),
+codex-rs/core/src/openai_tools.rs:1052:                        r#type: "object".to_string(),
+codex-rs/core/src/openai_tools.rs:1126:                        r#type: "object".to_string(),
+codex-rs/core/src/openai_tools.rs:1203:                        r#type: "object".to_string(),
+codex-rs/core/src/account_usage.rs:755:mod tests {
+codex-rs/tui/src/live_wrap.rs:205:mod tests {
+codex-rs/core/src/slash_commands.rs:233:mod tests {
+codex-rs/tui/src/exec_command.rs:69:mod tests {
+codex-rs/tui/src/user_approval_widget.rs:558:mod tests {
+codex-rs/core/src/dry_run_guard.rs:316:mod tests {
+codex-rs/tui/src/pager_overlay.rs:530:mod tests {
+codex-rs/tui/src/backtrack_helpers.rs:115:mod tests {
+codex-rs/tui/src/markdown_renderer.rs:1707:mod tests {
+codex-rs/tui/src/text_formatting.rs:106:mod tests {
+codex-rs/tui/src/text_formatting.rs:195:        assert_eq!(result, r#"{"name": "John", "age": 30}"#);
+codex-rs/tui/src/text_formatting.rs:212:        assert_eq!(result, r#"[1, 2, {"key": "value"}, "string"]"#);
+codex-rs/tui/src/text_formatting.rs:219:        assert_eq!(result, r#"{"compact": true}"#);
+codex-rs/tui/src/text_formatting.rs:267:        assert_eq!(format_json_compact(r#""string""#).unwrap(), r#""string""#);
+codex-rs/tui/src/insert_history.rs:551:mod tests {
+codex-rs/tui/src/theme.rs:644:mod tests {
+codex-rs/tui/src/theme.rs:671:            foreground: Color::Rgb(230, 237, 243),    // #E6EDF3
+codex-rs/tui/src/theme.rs:675:            cursor: Color::Rgb(230, 237, 243),        // #E6EDF3
+codex-rs/tui/src/theme.rs:678:            error: Color::Rgb(248, 81, 73),           // #F85149
+codex-rs/tui/src/theme.rs:680:            text: Color::Rgb(230, 237, 243),          // #E6EDF3
+codex-rs/tui/src/theme.rs:682:            text_bright: Color::White,                // #FFFFFF
+codex-rs/tui/src/theme.rs:695:            background: Color::Rgb(250, 250, 250),  // #FAFAFA
+codex-rs/tui/src/theme.rs:697:            border: Color::Rgb(206, 206, 206),      // #CECECE  (↑ contrast)
+codex-rs/tui/src/theme.rs:699:            selection: Color::Rgb(234, 242, 255),   // #EAF2FF
+codex-rs/tui/src/theme.rs:703:            error: Color::Rgb(207, 34, 46),         // #CF222E
+codex-rs/tui/src/theme.rs:720:            background: Color::Rgb(251, 251, 253),    // #FBFBFD
+codex-rs/tui/src/theme.rs:724:            selection: Color::Rgb(238, 243, 255),     // #EEF3FF
+codex-rs/tui/src/theme.rs:727:            warning: Color::Rgb(255, 190, 11),        // #FFBE0B
+codex-rs/tui/src/theme.rs:728:            error: Color::Rgb(255, 0, 110),           // #FF006E
+codex-rs/tui/src/theme.rs:744:            secondary: Color::Rgb(255, 166, 230),    // #FFA6E6
+codex-rs/tui/src/theme.rs:745:            background: Color::Rgb(250, 250, 250),   // #FAFAFA
+codex-rs/tui/src/theme.rs:749:            selection: Color::Rgb(230, 251, 255),    // #E6FBFF
+codex-rs/tui/src/theme.rs:752:            warning: Color::Rgb(255, 181, 0),        // #FFB500
+codex-rs/tui/src/theme.rs:753:            error: Color::Rgb(233, 53, 97),          // #E93561
+codex-rs/tui/src/theme.rs:758:            keyword: Color::Rgb(255, 78, 205),       // #FF4ECD
+codex-rs/tui/src/theme.rs:770:            background: Color::Rgb(245, 247, 250),    // #F5F7FA
+codex-rs/tui/src/theme.rs:774:            selection: Color::Rgb(231, 240, 255),     // #E7F0FF
+codex-rs/tui/src/theme.rs:793:            primary: Color::Rgb(201, 122, 0),        // #C97A00
+codex-rs/tui/src/theme.rs:795:            background: Color::Rgb(251, 248, 243),   // #FBF8F3
+codex-rs/tui/src/theme.rs:799:            selection: Color::Rgb(243, 232, 209),    // #F3E8D1
+codex-rs/tui/src/theme.rs:803:            error: Color::Rgb(198, 40, 40),          // #C62828
+codex-rs/tui/src/theme.rs:811:            function: Color::Rgb(201, 122, 0),       // #C97A00
+codex-rs/tui/src/theme.rs:813:            progress: Color::Rgb(201, 122, 0),       // #C97A00
+codex-rs/tui/src/theme.rs:820:            background: Color::Rgb(244, 248, 251),    // #F4F8FB
+codex-rs/tui/src/theme.rs:824:            selection: Color::Rgb(230, 243, 255),     // #E6F3FF
+codex-rs/tui/src/theme.rs:827:            warning: Color::Rgb(202, 138, 4),         // #CA8A04
+codex-rs/tui/src/theme.rs:846:            foreground: Color::Rgb(192, 202, 245),     // #C0CAF5
+codex-rs/tui/src/theme.rs:850:            cursor: Color::Rgb(192, 202, 245),         // #C0CAF5
+codex-rs/tui/src/theme.rs:852:            warning: Color::Rgb(224, 175, 104),        // #E0AF68
+codex-rs/tui/src/theme.rs:853:            error: Color::Rgb(247, 118, 142),          // #F7768E
+codex-rs/tui/src/theme.rs:855:            text: Color::Rgb(192, 202, 245),           // #C0CAF5
+codex-rs/tui/src/theme.rs:857:            text_bright: Color::White,                 // #FFFFFF
+codex-rs/tui/src/theme.rs:869:            secondary: Color::Rgb(255, 116, 208),    // #FF74D0
+codex-rs/tui/src/theme.rs:877:            warning: Color::Rgb(255, 209, 102),      // #FFD166
+codex-rs/tui/src/theme.rs:878:            error: Color::Rgb(255, 59, 48),          // #FF3B30
+codex-rs/tui/src/theme.rs:882:            text_bright: Color::White,               // #FFFFFF
+codex-rs/tui/src/theme.rs:883:            keyword: Color::Rgb(255, 116, 208),      // #FF74D0
+codex-rs/tui/src/theme.rs:893:            primary: Color::Rgb(255, 176, 0),        // #FFB000
+codex-rs/tui/src/theme.rs:894:            secondary: Color::Rgb(255, 209, 138),    // #FFD18A
+codex-rs/tui/src/theme.rs:896:            foreground: Color::Rgb(255, 209, 138),   // #FFD18A
+codex-rs/tui/src/theme.rs:900:            cursor: Color::Rgb(255, 209, 138),       // #FFD18A
+codex-rs/tui/src/theme.rs:901:            success: Color::Rgb(255, 207, 51),       // #FFCF33
+codex-rs/tui/src/theme.rs:902:            warning: Color::Rgb(255, 158, 0),        // #FF9E00
+codex-rs/tui/src/theme.rs:903:            error: Color::Rgb(255, 94, 58),          // #FF5E3A
+codex-rs/tui/src/theme.rs:904:            info: Color::Rgb(255, 184, 77),          // #FFB84D
+codex-rs/tui/src/theme.rs:905:            text: Color::Rgb(255, 209, 138),         // #FFD18A
+codex-rs/tui/src/theme.rs:907:            text_bright: Color::Rgb(255, 241, 194),  // #FFF1C2
+codex-rs/tui/src/theme.rs:908:            keyword: Color::Rgb(255, 193, 77),       // #FFC14D
+codex-rs/tui/src/theme.rs:909:            string: Color::Rgb(255, 224, 138),       // #FFE08A
+codex-rs/tui/src/theme.rs:911:            function: Color::Rgb(255, 176, 0),       // #FFB000
+codex-rs/tui/src/theme.rs:913:            progress: Color::Rgb(255, 176, 0),       // #FFB000
+codex-rs/tui/src/theme.rs:921:            foreground: Color::Rgb(230, 241, 255),     // #E6F1FF
+codex-rs/tui/src/theme.rs:925:            cursor: Color::Rgb(230, 241, 255),         // #E6F1FF
+codex-rs/tui/src/theme.rs:927:            warning: Color::Rgb(255, 212, 121),        // #FFD479
+codex-rs/tui/src/theme.rs:928:            error: Color::Rgb(255, 107, 129),          // #FF6B81
+codex-rs/tui/src/theme.rs:932:            text_bright: Color::White,                 // #FFFFFF
+codex-rs/tui/src/theme.rs:933:            keyword: Color::Rgb(194, 153, 255),        // #C299FF
+codex-rs/tui/src/theme.rs:944:            secondary: Color::Rgb(255, 138, 0),       // #FF8A00
+codex-rs/tui/src/theme.rs:946:            foreground: Color::Rgb(232, 232, 232),    // #E8E8E8
+codex-rs/tui/src/theme.rs:950:            cursor: Color::Rgb(232, 232, 232),        // #E8E8E8
+codex-rs/tui/src/theme.rs:952:            warning: Color::Rgb(255, 160, 0),         // #FFA000
+codex-rs/tui/src/theme.rs:953:            error: Color::Rgb(255, 77, 109),          // #FF4D6D
+codex-rs/tui/src/theme.rs:955:            text: Color::Rgb(232, 232, 232),          // #E8E8E8
+codex-rs/tui/src/theme.rs:957:            text_bright: Color::White,                // #FFFFFF
+codex-rs/tui/src/theme.rs:958:            keyword: Color::Rgb(255, 138, 0),         // #FF8A00
+codex-rs/tui/src/theme.rs:969:            secondary: Color::Rgb(242, 205, 205),      // #F2CDCD
+codex-rs/tui/src/theme.rs:977:            warning: Color::Rgb(249, 226, 175),        // #F9E2AF
+codex-rs/tui/src/theme.rs:978:            error: Color::Rgb(243, 139, 168),          // #F38BA8
+codex-rs/tui/src/theme.rs:982:            text_bright: Color::White,                 // #FFFFFF
+codex-rs/tui/src/theme.rs:983:            keyword: Color::Rgb(203, 166, 247),        // #CBA6F7
+codex-rs/tui/src/theme.rs:995:            background: Color::Rgb(247, 247, 245),  // #F7F7F5
+codex-rs/tui/src/theme.rs:999:            selection: Color::Rgb(231, 237, 243),   // #E7EDF3
+codex-rs/tui/src/theme.rs:1003:            error: Color::Rgb(207, 34, 46),         // #CF222E
+codex-rs/tui/src/glitch_animation.rs:342:    let (r2, g2, b2) = (255u8, 78u8, 205u8); // #FF4ECD
+codex-rs/tui/src/glitch_animation.rs:343:    let (r3, g3, b3) = (255u8, 181u8, 0u8); // #FFB500
+codex-rs/tui/src/history_cell/mod.rs:639:mod tests {
+codex-rs/tui/src/history_cell/mod.rs:4973:// - Up to 5 sections: a heading line (starts with #) plus the next 4 lines
+codex-rs/tui/src/status_indicator_widget.rs:188:mod tests {
+codex-rs/tui/src/streaming/controller.rs:125:    /// current reasoning summary index (parsed from the stream id like "…#s3").
+codex-rs/tui/src/streaming/controller.rs:137:        // Parse trailing #s<idx>
+codex-rs/tui/src/streaming/controller.rs:815:mod tests {
+codex-rs/tui/src/chatwidget/agent_install.rs:417:            r#type: "json_schema".to_string(),
+codex-rs/tui/src/bottom_pane/chat_composer.rs:2030:mod tests {
+codex-rs/tui/src/bottom_pane/textarea.rs:961:mod tests {
+codex-rs/tui/src/bottom_pane/agent_editor_view.rs:447:mod tests {
+codex-rs/tui/src/bottom_pane/theme_selection_view.rs:343:                let format = codex_core::TextFormat { r#type: "json_schema".to_string(), name: Some("custom_spinner".to_string()), strict: Some(true), schema: Some(schema) };
+codex-rs/tui/src/bottom_pane/theme_selection_view.rs:669:                let format = codex_core::TextFormat { r#type: "json_schema".to_string(), name: Some("custom_theme".to_string()), strict: Some(true), schema: Some(schema) };
+codex-rs/tui/src/bottom_pane/command_popup.rs:268:mod tests {
+codex-rs/tui/src/bottom_pane/approval_modal_view.rs:76:mod tests {
+codex-rs/tui/src/bottom_pane/chat_composer_history.rs:241:mod tests {
+codex-rs/tui/src/bottom_pane/scroll_state.rs:88:mod tests {
+codex-rs/tui/src/bottom_pane/mod.rs:878:mod tests_removed {
+codex-rs/tui/src/chatwidget/terminal.rs:664:mod tests {
+codex-rs/tui/src/chatwidget.rs:16569:mod tests {
+bash: fd: command not found

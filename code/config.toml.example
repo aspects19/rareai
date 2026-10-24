@@ -1,0 +1,181 @@
+# Codex Configuration Example
+# Copy this file to config.toml and customize as needed
+
+# Agent Configuration
+# Configure which external AI models are available and their settings
+[[agents]]
+name = "claude"
+command = "claude"
+enabled = true
+read-only = false
+description = "Claude AI assistant with full capabilities"
+args = ["--dangerously-skip-permissions"]
+
+[[agents]]
+name = "claude-safe"
+command = "claude"
+enabled = true
+read-only = true
+description = "Claude AI assistant in read-only mode"
+args = []
+
+[[agents]]
+name = "gemini"
+command = "gemini"
+enabled = true
+read-only = false
+description = "Google Gemini AI assistant"
+args = ["-y"]
+
+[[agents]]
+name = "gemini-safe"
+command = "gemini"
+enabled = true
+read-only = true
+description = "Google Gemini AI assistant in read-only mode"
+args = []
+
+[[agents]]
+name = "qwen"
+command = "qwen"
+enabled = true
+read-only = false
+description = "Qwen Coder assistant (tracks latest default model)"
+# No default -m: let the CLI choose its current default model
+# To pin a model explicitly, export QWEN_MODEL or add here, e.g.:
+# args = ["-m", "qwen3-coder", "-y"]
+args = ["-y"]
+# Optional environment variables (either name works; mirrored automatically):
+# env = { QWEN_API_KEY = "your-key", DASHSCOPE_API_KEY = "your-key" }
+
+[[agents]]
+name = "qwen-safe"
+command = "qwen"
+enabled = true
+read-only = true
+description = "Qwen Coder assistant in read-only mode"
+# No -y in read-only; omit -m to track latest default. To pin:
+# args = ["-m", "qwen3-coder"]
+args = []
+
+[[agents]]
+name = "codex"
+command = "codex"
+enabled = true
+read-only = false
+description = "Codex AI assistant (self-referential)"
+args = ["-s", "workspace-write", "-a", "never"]
+
+[[agents]]
+name = "context-collector"
+command = "gemini"
+enabled = true
+read-only = true
+description = "Gemini 2.5 long-context helper for repository sweeps"
+# Supply the long-context model and default yes flag
+args = ["-y", "--model", "gemini-2.5-pro-exp"]
+# Optional: pass API key overrides or helper tool environment
+# env = { GEMINI_API_KEY = "your-key", STATIC_ANALYZER = "scripts/blast-radius" }
+
+[[agents]]
+name = "gpt-4"
+command = "gpt"
+enabled = false
+read-only = false
+description = "OpenAI GPT-4 assistant"
+args = ["--model", "gpt-4"]
+# Optional environment variables for the agent
+# env = { OPENAI_API_KEY = "your-key-here" }
+
+# Custom agent example
+[[agents]]
+name = "custom-llm"
+command = "/usr/local/bin/custom-llm"
+enabled = false
+read-only = false
+description = "Custom LLM implementation"
+args = ["--config", "/path/to/config.json"]
+env = { MODEL_PATH = "/models/custom.bin", TEMP = "0.7" }
+
+# Sandbox Configuration
+# Controls file system access and permissions
+sandbox-mode = "workspace-write"
+
+[sandbox-workspace-write]
+writable-roots = ["."]
+network-access = true
+exclude-tmpdir-env-var = false
+exclude-slash-tmp = false
+
+# Shell Environment Configuration
+[shell-environment-policy]
+inherit = "all"
+ignore-default-excludes = false
+# Exclude sensitive environment variables
+exclude = ["*SECRET*", "*PASSWORD*", "*CREDENTIAL*"]
+# Set custom environment variables
+set = { EDITOR = "vim", PAGER = "less" }
+
+# History Configuration
+[history]
+persistence = "save-all"
+max-bytes = 10485760  # 10MB
+
+# MCP Server Configuration
+# Example MCP server configurations
+[mcp-servers.example-server]
+command = "npx"
+args = ["-y", "@example/mcp-server"]
+env = { API_KEY = "your-api-key" }
+
+# File Opener Configuration
+file-opener = "vscode"  # Options: vscode, vscode-insiders, windsurf, cursor, none
+
+# Subagent Commands
+# Configure built-in and custom multi-agent slash commands.
+# Each entry overrides defaults when the `name` matches a built-in: plan | solve | code.
+#
+# Fields:
+# - name: command name (e.g., "plan")
+# - read-only: true for read-only (default: plan/solve=true, code=false)
+# - agents: array of agent names; if empty, falls back to enabled [[agents]] or built-ins
+# - orchestrator-instructions: extra instructions appended to Code (the coordinator)
+# - agent-instructions: extra instructions appended to each agent’s prompt
+
+[subagents]
+
+[[subagents.commands]]
+name = "plan"
+read-only = true
+agents = ["claude", "gemini", "qwen"]
+orchestrator-instructions = "Focus on discovering project layout and risks. Prefer small, verifiable steps."
+agent-instructions = "Summarize assumptions explicitly. Cite files you read."
+
+[[subagents.commands]]
+name = "solve"
+read-only = true
+agents = ["claude", "gemini", "qwen"]
+orchestrator-instructions = "Run multiple approaches in parallel and compare. Defer cancellation until a tested fix exists."
+agent-instructions = "Propose a concrete fix with steps to validate."
+
+[[subagents.commands]]
+name = "code"
+read-only = false
+agents = ["claude", "gemini", "qwen"]
+orchestrator-instructions = "Coordinate implementations across agents; surface worktree locations and branches."
+agent-instructions = "Write minimal, focused changes with clear rationale. Include test or validation steps."
+
+[[subagents.commands]]
+name = "context"
+read-only = true
+agents = ["context-collector", "codex"]
+orchestrator-instructions = "Launch a context sweep before coding. Aggregate file summaries and tooling hints for the main agent."
+agent-instructions = "Summarize high-signal files, why they matter, and recommended analysis commands. Keep replies concise."
+
+# Custom example
+[[subagents.commands]]
+name = "review"
+read-only = true
+agents = ["claude", "gemini", "qwen"]
+orchestrator-instructions = "Perform a multi-agent code review; reconcile disagreements into actionable feedback."
+agent-instructions = "Provide inline comments, cite files/lines, and suggest precise diffs."
